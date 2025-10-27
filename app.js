@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.classList.add('active');
                 button.setAttribute('aria-selected', 'true');
                 
-                // Show corresponding panel
+                // Show corresponding panel with correct ID format
                 const targetPanel = document.getElementById(`${targetTab}-confronto-tab`);
                 if (targetPanel) {
                     targetPanel.classList.add('active');
@@ -190,22 +190,33 @@ document.addEventListener('DOMContentLoaded', function() {
                         targetPanel.style.transform = 'translateY(0)';
                     });
                     
-                    console.log(`Panel "${targetTab}" activated successfully`);
+                    console.log(`✅ Panel "${targetTab}" activated successfully`);
                     
                     // Scroll into view if needed
                     targetPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    console.error(`Panel not found: ${targetTab}-confronto-tab`);
+                    console.error(`❌ Panel not found: ${targetTab}-confronto-tab`);
+                    // Debug: list all available panel IDs
+                    const allPanels = document.querySelectorAll('.confronto-tab-panel');
+                    console.log('Available panels:', Array.from(allPanels).map(p => p.id));
                 }
             });
         });
         
-        // Initialize first tab as active
+        // Initialize first tab as active (Tabella Generale)
         if (confrontoTabButtons.length > 0) {
             const firstButton = confrontoTabButtons[0];
             const firstTabId = firstButton.getAttribute('data-confronto-tab');
             const firstPanel = document.getElementById(`${firstTabId}-confronto-tab`);
             
+            // Clear all first
+            confrontoTabButtons.forEach(btn => btn.classList.remove('active'));
+            confrontoTabPanels.forEach(panel => {
+                panel.classList.remove('active');
+                panel.style.display = 'none';
+            });
+            
+            // Activate first tab
             firstButton.classList.add('active');
             firstButton.setAttribute('aria-selected', 'true');
             
@@ -213,9 +224,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstPanel.classList.add('active');
                 firstPanel.style.display = 'block';
                 firstPanel.removeAttribute('hidden');
+                console.log('✅ First tab initialized:', firstTabId);
+            } else {
+                console.error('❌ First panel not found:', `${firstTabId}-confronto-tab`);
             }
-            
-            console.log('First tab initialized:', firstTabId);
         }
     }
     
@@ -432,10 +444,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Verify Focus Fonti Rinnovabili tab is working
         const focusTab = document.querySelector('[data-confronto-tab="fer-dettaglio"]');
-        if (focusTab) {
-            console.log('✅ Focus Fonti Rinnovabili tab found and ready');
+        const focusPanel = document.getElementById('fer-dettaglio-confronto-tab');
+        
+        if (focusTab && focusPanel) {
+            console.log('✅ Focus Fonti Rinnovabili system COMPLETE');
+            console.log('  - Button:', focusTab.textContent.trim());
+            console.log('  - Panel ID:', focusPanel.id);
+            console.log('  - Content loaded:', focusPanel.children.length > 0 ? '✅' : '❌');
         } else {
-            console.error('❌ Focus Fonti Rinnovabili tab NOT found');
+            console.error('❌ Focus Fonti Rinnovabili system INCOMPLETE');
+            console.log('  - Button found:', !!focusTab);
+            console.log('  - Panel found:', !!focusPanel);
         }
         
         // Verify all navigation elements are working
@@ -444,6 +463,12 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('- Submenu links:', document.querySelectorAll('.nav-submenu a').length);
         console.log('- Tab buttons:', document.querySelectorAll('.tab-btn').length);
         console.log('- Confronto buttons:', document.querySelectorAll('.confronto-tab-btn').length);
+        console.log('- Confronto panels:', document.querySelectorAll('.confronto-tab-panel').length);
+        
+        // Run debug function
+        if (typeof window.debugConfrontoTabs === 'function') {
+            window.debugConfrontoTabs();
+        }
     }, 1500);
 });
 
@@ -488,12 +513,34 @@ window.switchToFocusFontiRinnovabili = function() {
     const focusButton = document.querySelector('[data-confronto-tab="fer-dettaglio"]');
     if (focusButton) {
         focusButton.click();
-        console.log('Switched to Focus Fonti Rinnovabili via global function');
+        console.log('✅ Switched to Focus Fonti Rinnovabili via global function');
         return true;
     } else {
-        console.error('Focus button not found');
+        console.error('❌ Focus button not found');
         return false;
     }
+};
+
+// Debug function to verify tab system integrity
+window.debugConfrontoTabs = function() {
+    console.log('🔍 DEBUGGING CONFRONTO TAB SYSTEM');
+    
+    const buttons = document.querySelectorAll('.confronto-tab-btn');
+    const panels = document.querySelectorAll('.confronto-tab-panel');
+    
+    console.log(`📊 Found ${buttons.length} buttons and ${panels.length} panels`);
+    
+    buttons.forEach((btn, index) => {
+        const tabId = btn.getAttribute('data-confronto-tab');
+        const expectedPanelId = `${tabId}-confronto-tab`;
+        const panel = document.getElementById(expectedPanelId);
+        
+        console.log(`🔘 Button ${index + 1}: ${tabId} → Panel: ${panel ? '✅' : '❌'} (${expectedPanelId})`);
+    });
+    
+    panels.forEach((panel, index) => {
+        console.log(`📄 Panel ${index + 1}: ${panel.id} → Active: ${panel.classList.contains('active') ? '✅' : '❌'}`);
+    });
 };
 
 // Global function to navigate to sections with tab switching
@@ -509,18 +556,31 @@ window.navigateToSection = function(sectionId, tabId = null, confrontoTabId = nu
         setTimeout(() => {
             if (tabId) {
                 const tabButton = document.querySelector(`[data-tab="${tabId}"]`);
-                if (tabButton) tabButton.click();
+                if (tabButton) {
+                    tabButton.click();
+                    console.log(`✅ Activated tab: ${tabId}`);
+                }
             }
             
             if (confrontoTabId) {
                 const confrontoButton = document.querySelector(`[data-confronto-tab="${confrontoTabId}"]`);
-                if (confrontoButton) confrontoButton.click();
+                if (confrontoButton) {
+                    confrontoButton.click();
+                    console.log(`✅ Activated confronto tab: ${confrontoTabId}`);
+                } else {
+                    console.error(`❌ Confronto button not found: ${confrontoTabId}`);
+                }
             }
         }, 500);
         
         return true;
     }
     return false;
+};
+
+// Specific function for Focus Fonti Rinnovabili navigation
+window.navigateToFocusFER = function() {
+    return navigateToSection('confronto', null, 'fer-dettaglio');
 };
 
 // Add visual indicator when tab is working
@@ -573,8 +633,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const focusPanel = document.getElementById('fer-dettaglio-confronto-tab');
     
     if (focusButton && focusPanel) {
+        console.log('✅ Focus Fonti Rinnovabili backup handler ready');
+        
         focusButton.addEventListener('click', function(e) {
-            console.log('BACKUP: Focus Fonti Rinnovabili clicked');
+            console.log('🔄 BACKUP: Focus Fonti Rinnovabili clicked');
             e.preventDefault();
             e.stopPropagation();
             
@@ -594,8 +656,12 @@ document.addEventListener('DOMContentLoaded', function() {
             focusPanel.style.display = 'block';
             focusButton.classList.add('active');
             
-            console.log('Focus panel should be visible now');
+            console.log('✅ Focus panel activated via backup handler');
         });
+    } else {
+        console.error('❌ Focus button or panel not found for backup handler');
+        console.log('Focus button found:', !!focusButton);
+        console.log('Focus panel found:', !!focusPanel);
     }
 });
 
